@@ -20,16 +20,13 @@ def rename_file (files : list, file_path : str) :
     for file in files :
         # split file name and extention 
         file_name, file_ext = os.path.splitext(file)
-        
-        if re.match(r"(^[0-9]{1,2})-([0-9]{1,2}$)", file_name) :
-                
-            #check the extension of the file
-            if file_ext in ['.mp4', '.wmv'] :
-                
+                        
+        #check the extension of the file
+        if file_ext in ['.mp4', '.wmv'] :
+            #check file pattern with regex
+            if re.match(r"(^[0-9]{1,2})-([0-9]{1,2}$)", file_name) :
                 # split our format
                 rename  = file_name.split('-')
-                
-                
                 try :
                     # put new file name and extension together
                     new_file = f"{rename[1]}-{rename[0]}{file_ext}"
@@ -56,6 +53,8 @@ def rename_file (files : list, file_path : str) :
                     # rename file with its path
                     os.rename(old_file_path, new_file_path)
                     print(f"{new_file_path=} ---- {old_file_path=}")
+            else :
+                print(f"{file_path=} {file=}")
 
 
 if __name__ == "__main__" :    
