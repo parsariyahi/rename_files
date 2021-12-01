@@ -4,10 +4,9 @@ import string
 import random
 
 class Rename :
-    
-    def __init__(slef) :
-        pass
-    
+    _path = ''
+    _pattern = ''
+
     def get_files_name (self, path) : # get all file name are in the current dir
         # dir[0] --> dir name ---------- dir[1] --> dirs name in the current dir ---------- dir[2] --> fiels name in the current dir 
         for dir in os.walk(path):
@@ -69,5 +68,23 @@ class Rename :
         
         return False
     #TODO raise an error for (can not rename this file)
-    
-    
+
+    def switch_places (self, file, file_path, EXTENSIONS, FORMAT_PATTERN, SEPERATOR) :
+            file_name, file_ext = self.split_file_name(file) #-------------------------------------------------
+                            
+            #TODO make these if in one if with AND -- handel eceptions with raise errors
+            if self.check_file_ext(file_ext, EXTENSIONS) :  #-------------------------------------------------
+                            
+                if self.check_file_pattern(file_name, FORMAT_PATTERN) :  #-------------------------------------------------
+                            
+                    rename = self.split_file_format(file_name, SEPERATOR) #-------------------------------------------------
+                    self.change_file_name(file, file_path, file_ext, rename)  #-------------------------------------------------
+                            
+                else :
+                    print(f"{file_path=} {file=}")
+                    #TODO do this in a better way
+            else :
+                print(f"{file=}")
+                
+        #TODO handel with try except and raise error
+        
