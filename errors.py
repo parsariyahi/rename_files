@@ -1,11 +1,12 @@
 class Error (Exception) :
     pass
 
+class FilePatternError (Error) :
+    pass
 
-class PatternError (Error) :
-    def __init__(self, msg) :
-        self.msg = msg
+class FileExtensionError (Error) :
+    pass
 
-class ExtensionError (Error) :
-    def __init__(self, msg, file_ext, valid_ext) :
-        self.msg = f"{msg} -- file extension : {file_ext} -- valid extension {valid_ext}"
+
+class AllErrors(FileExtensionError, FilePatternError) :
+    pass
