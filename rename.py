@@ -9,9 +9,15 @@ class Rename (AllErrors):
     __pattern = ''
     __extensions = []
     __ignore_ext = False
+    __ignore_pattern = False
+    __ignored_files = []
 
+    
     def ignore_extension (self) -> None:
         self.__ignore_ext = True
+
+    def ignore_pattern (self) -> None:
+        self.__ignore_pattern = True
 
     def set_path (self, path : str) -> None :
         self.__path = path
@@ -30,8 +36,13 @@ class Rename (AllErrors):
 
     def get_extension (self) -> list:
         return self.__extensions
+    
+    def get_ignored_files(self) :
+        
+        return self.__ignored_files
 
-    def get_files_name (self) : # get all file name are in the current dir
+
+    def get_files_info (self) : # get all file name are in the current dir
         # dir[0] --> dir name ---------- dir[1] --> dirs name in the current dir ---------- dir[2] --> fiels name in the current dir 
         for dir in os.walk(self.__path):
             if dir[2] : #if there is any file
@@ -69,7 +80,8 @@ class Rename (AllErrors):
             if not self.__ignore_ext : 
                 self.check_file_ext(file_ext)
 
-            self.check_file_pattern(file_name)
+            if not self.__ignore_pattern :
+                self.check_file_pattern(file_name)
 
             return True
 
@@ -79,7 +91,6 @@ class Rename (AllErrors):
 
         except FileExtensionError as FEE:
             valid_ext = " | ".join(str(ext) for ext in self.__extensions)
-            print(valid_ext)
             FEE.args = (FEE.args[0] + " -- file extension : " + file_ext + " -- valid extension :" + valid_ext, )
             raise
 
@@ -88,12 +99,11 @@ class Rename (AllErrors):
     def split_file_format(self, file_name, seperator) : # split our format
         return file_name.split(seperator)
     
-    def change_file_name (self, file : str, file_path : str, file_ext : str, new_name : list) :
+    def change_file_name (self, file:dict) -> bool:
+        # file {name : file name , path : file path, new_name : file new name}
         try :
-            new_file = f"{new_name[1]}-{new_name[0]}{file_ext}" # put new file name and extension together
-            
-            old_file_path = f"{file_path}/{file}" # create full path for new and old file name
-            new_file_path = f"{file_path}/{new_file}"
+            old_file_path = f"{file['path']}/{file['name']}" # create full path for new and old file name
+            new_file_path = f"{file['path']}/{file['new_name']}"
             os.rename(old_file_path, new_file_path) # rename file with its path
             
             return True
@@ -103,37 +113,32 @@ class Rename (AllErrors):
             letters = string.ascii_lowercase #all letters
             
             rand_str = ''.join(random.choice(letters) for _ in range(3)) #this will create a random string for new file
-            new_file = f"{new_name[1]}-{new_name[0]}_{rand_str}{file_ext}"
-            
            
-            old_file_path = f"{file_path}/{file}"  # create full path for new and old file name
-            new_file_path = f"{file_path}/{new_file}"
+            old_file_path = f"{file['path']}/{file['name']}" # create full path for new and old file name
+            new_file_path = f"{file['path']}/{rand_str}_{file['new_name']}"
             os.rename(old_file_path, new_file_path) # rename file with its path
-            print(f"{new_file_path=} ---- {old_file_path=}")
             
             return True
         
         return False
     #TODO raise an error for (can not rename this file)
 
-    def switch_places (self, file, file_path, EXTENSIONS, FORMAT_PATTERN, SEPERATOR) :
-            file_name, file_ext = self.split_file_name(file) #-------------------------------------------------
-                            
-            try :
-                #TODO make these if in one if with AND -- handel eceptions with raise errors
-                if self.check_file_ext(file_ext, EXTENSIONS) :  #-------------------------------------------------
-                                
-                    if self.check_file_pattern(file_name, FORMAT_PATTERN) :  #-------------------------------------------------
-                                
-                        rename = self.split_file_format(file_name, SEPERATOR) #-------------------------------------------------
-                        self.change_file_name(file, file_path, file_ext, rename)  #-------------------------------------------------
-                                
-                    else :
-                        print(f"{file_path=} {file=}")
-                        #TODO do this in a better way
-                else :
-                    print(f"{file=}")
-                    
-            #TODO handel with try except and raise error
-            except ExtensionError :
-                raise
+    def switch_places (self, seperator:str) :
+        for path, files in self.get_files_info() :
+            for file in files :
+                try :
+                    if self.file_validation(file) :
+                        file_name , file_ext = self.split_file_name_ext(file)
+                        new_file_name = file_name.split(seperator)
+                        new_file_name = new_file_name[1] + seperator + new_file_name[0] + file_ext
+                        file_info = {
+                                "name" : file,
+                                "path" : path,
+                                "new_name" : new_file_name
+                                }
+                        self.change_file_name(file_info)
+                except FileExtensionError :
+                    self.__ignored_files.append(file)
+                except FilePatternError :
+                    self.__ignored_files.append(file)
+
